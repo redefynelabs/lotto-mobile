@@ -7,4 +7,8 @@ class AppColors {
   static const thunderbird400 = Color(0xFFFF5959);
   static const thunderbird300 = Color(0xFFFF5959);
   static const thunderbird200 = Color(0xFFFFC1C1);
+  static const thunderbird50 = Color.fromARGB(13, 208, 0, 0);
+
+  static const background = Color(0xffFFFAF4);
+  static const lightgray = Color(0xffF9F9F9);
 }

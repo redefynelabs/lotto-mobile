@@ -35,11 +35,22 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   dio: ^5.9.0
+  dio_refresh: ^1.0.5
   shared_preferences: ^2.5.3
   intl: ^0.20.2
   riverpod: ^3.0.3
   flutter_riverpod: ^3.0.3
+  flutter_secure_storage: ^9.2.4
   freezed: ^3.2.3
+  flutter_svg: ^2.2.3
+  shimmer: ^3.0.0
+  device_info_plus: ^12.3.0
+  uuid: ^4.5.2
+  webview_flutter: ^4.13.0
+  webview_flutter_android: ^4.10.10
+  webview_flutter_wkwebview: ^3.23.4
+  animate_do: ^4.2.0
+
 
 dev_dependencies:
   flutter_test:
@@ -81,6 +92,9 @@ flutter:
   assets:
     - assets/
     - assets/fonts/
+    - assets/icons/
+    - assets/icons/bold/
+    - assets/images/
 
   fonts:
     - family: FoundersGrotesk
