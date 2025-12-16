@@ -15,4 +15,13 @@ final walletHistoryProvider = FutureProvider.family<List<WalletTx>, int>((ref, p
   return repo.getHistory(page, 50);
 });
 
+final winCreditTxProvider = FutureProvider<List<WalletTx>>((ref) async {
+  final repo = ref.watch(walletRepositoryProvider);
+  final all = await repo.getHistory(1, 500);
+
+  return all.where((tx) =>
+      tx.type == "WIN_CREDIT" &&
+      (tx.meta["settled"] != true)
+  ).toList();
+});
 

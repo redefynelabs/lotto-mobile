@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:win33/app/providers/user_provider.dart';
 import 'package:win33/core/theme/app_colors.dart';
 import 'package:win33/features/auth/presentation/unauthorized_page.dart';
 import 'package:win33/features/profile/presentation/profile_page.dart';
+import 'package:win33/features/wallet/presentation/wallet_home_page.dart';
 
 class ReusableAppBar extends ConsumerWidget implements PreferredSizeWidget {
   const ReusableAppBar({super.key});
@@ -12,11 +14,17 @@ class ReusableAppBar extends ConsumerWidget implements PreferredSizeWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final userAsync = ref.watch(userProvider);
 
+    // Handle all states safely
     return userAsync.when(
       loading: _buildSkeleton,
       error: (_, __) => _buildGuestBar(context),
-      data: (user) =>
-          user == null ? _buildGuestBar(context) : _buildUserBar(context, user),
+      data: (user) {
+        // 🔥 IMPORTANT: user == null → Guest
+        if (user == null) return _buildGuestBar(context);
+
+        // Logged-in user
+        return _buildUserBar(context, user);
+      },
     );
   }
 
@@ -87,6 +95,7 @@ class ReusableAppBar extends ConsumerWidget implements PreferredSizeWidget {
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  fontFamily: "Coolvetica",
                   color: Colors.black,
                 ),
               ),
@@ -100,6 +109,8 @@ class ReusableAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
+                    fontFamily: "Coolvetica",
+
                     color: Colors.black,
                   ),
                 ),
@@ -120,10 +131,15 @@ class ReusableAppBar extends ConsumerWidget implements PreferredSizeWidget {
               MaterialPageRoute(builder: (_) => const UnauthorizedPage()),
             );
           },
-          icon: Icon(
-            Icons.notifications_none_rounded,
-            size: 30,
-            color: AppColors.thunderbird400,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          icon: SvgPicture.asset(
+            'assets/icons/wallet.svg',
+            width: 30,
+            height: 30,
+            colorFilter: const ColorFilter.mode(
+              AppColors.primary,
+              BlendMode.srcIn,
+            ),
           ),
         ),
       ],
@@ -142,6 +158,15 @@ class ReusableAppBar extends ConsumerWidget implements PreferredSizeWidget {
         children: [
           GestureDetector(
             onTap: () {
+              // Prevent crash → ensure user still valid
+              if (user == null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const UnauthorizedPage()),
+                );
+                return;
+              }
+
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ProfilePage()),
@@ -151,12 +176,13 @@ class ReusableAppBar extends ConsumerWidget implements PreferredSizeWidget {
               radius: 26,
               backgroundColor: AppColors.primary.withOpacity(0.1),
               child: Text(
-                user.firstName.isNotEmpty
+                (user.firstName?.isNotEmpty ?? false)
                     ? user.firstName[0].toUpperCase()
                     : "?",
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
+                  fontFamily: "Coolvetica",
                   color: Colors.black,
                 ),
               ),
@@ -167,15 +193,16 @@ class ReusableAppBar extends ConsumerWidget implements PreferredSizeWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                user.firstName,
+                user.firstName ?? "",
                 style: const TextStyle(
                   fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: "Coolvetica",
                   color: Colors.black,
                 ),
               ),
               Text(
-                user.phone,
+                user.phone ?? "",
                 style: const TextStyle(fontSize: 14, color: Colors.black54),
               ),
             ],
@@ -186,14 +213,24 @@ class ReusableAppBar extends ConsumerWidget implements PreferredSizeWidget {
         Stack(
           children: [
             IconButton(
-              onPressed: () {},
-              icon: Icon(
-                Icons.notifications_none_rounded,
-                size: 30,
-                color: AppColors.thunderbird400,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const WalletHomePage()),
+                );
+              },
+              icon: SvgPicture.asset(
+                'assets/icons/wallet.svg',
+                width: 30,
+                height: 30,
+                colorFilter: const ColorFilter.mode(
+                  AppColors.primary,
+                  BlendMode.srcIn,
+                ),
               ),
             ),
-            if (user.unreadCount > 0)
+            if ((user.unreadCount ?? 0) > 0)
               Positioned(
                 right: 10,
                 top: 10,

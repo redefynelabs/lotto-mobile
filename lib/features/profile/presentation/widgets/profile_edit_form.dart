@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:win33/app/providers/user_provider.dart';
 import 'package:win33/core/theme/app_colors.dart';
@@ -109,7 +110,10 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
               // 3️⃣ Toast
               AppToast.show(context, message: "Profile updated successfully!");
             },
-            child: const Text("Save", style: TextStyle(color: Colors.white)),
+            child: const Text(
+              "Save",
+              style: TextStyle(color: Colors.white, fontFamily: "Coolvetica"),
+            ),
           ),
         ),
       ],
@@ -120,7 +124,7 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label),
+        Text(label, style: TextStyle(fontFamily: "Coolvetica")),
         const SizedBox(height: 4),
         Container(
           decoration: BoxDecoration(
@@ -129,9 +133,13 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
           ),
           child: TextField(
             controller: ctrl,
+            style: TextStyle(fontFamily: "Coolvetica"),
             decoration: const InputDecoration(
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 14,
+              ),
             ),
           ),
         ),
@@ -143,7 +151,7 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Gender"),
+        const Text("Gender", style: TextStyle(fontFamily: "Coolvetica")),
         const SizedBox(height: 4),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -151,6 +159,7 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
               value: selectedGender,
+              style: TextStyle(fontFamily: "Coolvetica", color: Colors.black),
               isExpanded: true,
               items: const [
                 DropdownMenuItem(value: "Male", child: Text("Male")),
@@ -171,7 +180,7 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("DOB"),
+        const Text("DOB", style: TextStyle(fontFamily: "Coolvetica")),
         const SizedBox(height: 4),
         GestureDetector(
           onTap: () => _openCalendar(context),
@@ -181,8 +190,19 @@ class _ProfileEditFormState extends ConsumerState<ProfileEditForm> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(DateFormat("dd-MM-yyyy").format(selectedDob)),
-                const Icon(Icons.calendar_month),
+                Text(
+                  DateFormat("dd-MM-yyyy").format(selectedDob),
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                SvgPicture.asset(
+                  'assets/icons/calendar.svg',
+                  width: 20,
+                  height: 20,
+                  colorFilter: const ColorFilter.mode(
+                    Colors.black87,
+                    BlendMode.srcIn,
+                  ),
+                ),
               ],
             ),
           ),

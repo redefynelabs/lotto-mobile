@@ -7,11 +7,11 @@ class WalletRepository {
   final Dio _client = DioClient.dio;
 
   Future<WalletBalance> getBalance() async {
-    print(">>> WALLET: calling /wallet/balance");
+    // print(">>> WALLET: calling /wallet/balance");
 
     final res = await _client.get("/wallet/balance");
 
-    print(">>> WALLET response: ${res.data}");
+    // print(">>> WALLET response: ${res.data}");
 
     return WalletBalance.fromJson(res.data);
   }

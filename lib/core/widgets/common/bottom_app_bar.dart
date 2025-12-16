@@ -20,10 +20,7 @@ class AppBottomNav extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(.03),
-            blurRadius: 8,
-          )
+          BoxShadow(color: Colors.black.withOpacity(.03), blurRadius: 8),
         ],
       ),
       child: Row(
@@ -65,17 +62,14 @@ class AppBottomNav extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SvgPicture.asset(
-            isActive ? activeIcon : icon,
-            height: 28,
-            width: 28,
-          ),
+          SvgPicture.asset(isActive ? activeIcon : icon, height: 28, width: 28),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w400,
+              fontFamily: "Coolvetica",
               color: isActive ? AppColors.primary : Colors.grey,
             ),
           ),

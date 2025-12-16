@@ -42,7 +42,11 @@ class _SignupPageState extends State<SignupPage> {
                 children: [
                   const Text(
                     "Create Account",
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+                    style: TextStyle(
+                      fontSize: 26,
+                      fontFamily: "Coolvetica",
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   const Text(
@@ -169,7 +173,11 @@ class _SignupPageState extends State<SignupPage> {
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        style: const TextStyle(
+          fontSize: 15,
+          fontFamily: "Coolvetica",
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }
@@ -195,7 +203,10 @@ class _SignupPageState extends State<SignupPage> {
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: hint,
-          hintStyle: const TextStyle(color: Colors.black38),
+          hintStyle: const TextStyle(
+            color: Colors.black38,
+            fontFamily: "Coolvetica",
+          ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,
             vertical: 16,
@@ -220,13 +231,16 @@ class _SignupPageState extends State<SignupPage> {
           value: gender,
           hint: const Text(
             "Select gender",
-            style: TextStyle(color: Colors.black38),
+            style: TextStyle(color: Colors.black38, fontFamily: "Coolvetica"),
           ),
           isExpanded: true,
           items: genderOptions.entries.map((entry) {
             return DropdownMenuItem(
               value: entry.key, // MALE / FEMALE / OTHER
-              child: Text(entry.value), // Male / Female / Other
+              child: Text(
+                entry.value,
+                style: TextStyle(fontFamily: "Coolvetica"),
+              ), // Male / Female / Other
             );
           }).toList(),
           onChanged: (value) {
@@ -300,7 +314,11 @@ class _SignupPageState extends State<SignupPage> {
         onPressed: onPressed,
         child: Text(
           label,
-          style: const TextStyle(fontSize: 16, color: Colors.white),
+          style: const TextStyle(
+            fontSize: 16,
+            fontFamily: "Coolvetica",
+            color: Colors.white,
+          ),
         ),
       ),
     );

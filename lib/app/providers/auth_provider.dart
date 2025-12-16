@@ -1,50 +1,49 @@
-import 'package:dio/dio.dart';
-import 'package:dio_refresh/dio_refresh.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:win33/features/auth/data/auth_repository.dart';
+import 'package:win33/core/network/app_token_manager.dart';
+import 'package:win33/core/network/token_store.dart';
+import 'package:win33/core/network/dio_client.dart';
+import 'package:win33/core/storage/app_prefs.dart';
 import 'package:win33/app/providers/user_provider.dart';
 import 'package:win33/app/providers/wallet_provider.dart';
 import 'package:win33/core/models/user_model.dart';
-import 'package:win33/core/network/token_manager.dart';
-import 'package:win33/core/storage/app_prefs.dart';
-import 'package:win33/features/auth/data/auth_repository.dart';
-import 'package:win33/features/profile/presentation/profile_page.dart';
 
 class AuthState {
   final bool isLoggedIn;
-  final bool isInitializing;
   final bool isLoading;
-  final String? errorMessage;
+  final bool isInitializing;
   final UserModel? user;
+  final String? errorMessage;
 
   AuthState({
     required this.isLoggedIn,
-    this.isInitializing = true,
     this.isLoading = false,
-    this.errorMessage,
+    this.isInitializing = true,
     this.user,
+    this.errorMessage,
   });
 
   AuthState copyWith({
     bool? isLoggedIn,
     bool? isInitializing,
     bool? isLoading,
-    String? errorMessage,
     UserModel? user,
+    String? errorMessage,
   }) {
     return AuthState(
       isLoggedIn: isLoggedIn ?? this.isLoggedIn,
       isInitializing: isInitializing ?? this.isInitializing,
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage,
       user: user ?? this.user,
+      errorMessage: errorMessage,
     );
   }
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier(this.ref)
-    : super(AuthState(isLoggedIn: false, isInitializing: true)) {
+  AuthNotifier(this.ref) : super(AuthState(isLoggedIn: false)) {
     _loadUser();
   }
 
@@ -52,28 +51,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final repo = AuthRepository();
 
   Future<void> _loadUser() async {
-    try {
-      final token = await AppPrefs.getAccessToken();
-      final userJson = await AppPrefs.getUserJson();
+    await AppTokenManager.instance.load();
+    final tokens = AppTokenManager.instance.tokens;
 
-      if (token != null && token.isNotEmpty && userJson != null) {
-        final user = UserModel.fromJson(userJson);
-        state = state.copyWith(
-          isLoggedIn: true,
-          isInitializing: false,
-          user: user,
-          errorMessage: null,
-        );
+    final userJson = await AppPrefs.getUserJson();
 
-        // Ensure userProvider is immediately synced
-        ref.read(userProvider.notifier).setUser(user);
+    if (tokens.hasBoth && userJson != null) {
+      final user = UserModel.fromJson(userJson);
+      ref.read(userProvider.notifier).setUser(user);
 
-        // Attempt to refresh latest profile in background
-        ref.read(userProvider.notifier).loadUser();
-      } else {
-        state = state.copyWith(isInitializing: false);
-      }
-    } catch (e) {
+      state = state.copyWith(
+        isLoggedIn: true,
+        isInitializing: false,
+        user: user,
+      );
+
+      ref.read(userProvider.notifier).loadUser(); // background sync
+    } else {
       state = state.copyWith(isInitializing: false);
     }
   }
@@ -82,97 +76,56 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       state = state.copyWith(isLoading: true, errorMessage: null);
 
-      // API → returns LoginResponse (user + tokens)
       final login = await repo.login(phone: phone, password: password);
+
       final user = login.user;
 
-      // ================================
-      // 1️⃣ SAVE USER + TOKENS IMMEDIATELY
-      // ================================
       await AppPrefs.saveUserJson(user.toJson());
 
-      await AppPrefs.saveTokens(
+      final tokens = TokenStore(
+        accessToken: login.accessToken,
+        refreshToken: login.refreshToken,
+      );
+
+      await AppTokenManager.instance.save(tokens);
+
+      DioClient.updateTokens(
         access: login.accessToken,
         refresh: login.refreshToken,
       );
 
-      // ================================================
-      // 2️⃣ UPDATE DioRefresh TokenManager immediately
-      // ================================================
-      AppTokenManager.instance.tokenManager.setToken(
-        TokenStore(
-          accessToken: login.accessToken,
-          refreshToken: login.refreshToken,
-        ),
-      );
-
-      // ==========================
-      // 3️⃣ UPDATE AUTH STATE
-      // ==========================
       state = state.copyWith(
         isLoggedIn: true,
         isLoading: false,
         user: user,
-        errorMessage: null,
-        isInitializing: false,
       );
 
-      // ================================
-      // 4️⃣ SYNC USER PROVIDER INSTANTLY
-      // ================================
-      final userNotifier = ref.read(userProvider.notifier);
-      userNotifier.setUser(user);
-
-      // =========================================
-      // 5️⃣ INVALIDATE TOKEN DEPENDENT PROVIDERS
-      // =========================================
+      ref.read(userProvider.notifier).setUser(user);
       ref.invalidate(walletBalanceProvider);
       ref.invalidate(walletHistoryProvider);
-      ref.invalidate(devicesProvider);
 
-      // =============================
-      // 6️⃣ REFRESH PROFILE IN BACKGROUND
-      // =============================
-      userNotifier.loadUser();
+      ref.read(userProvider.notifier).loadUser();
     } catch (e) {
-      String message = "Login failed";
+      String msg = "Login failed";
 
       if (e is DioException) {
-        final data = e.response?.data;
-
-        if (data is Map && data["message"] != null) {
-          message = data["message"]; // backend message
-        } else {
-          message = e.message ?? message; // fallback
-        }
-      } else {
-        message = e.toString();
+        msg = e.response?.data?["message"] ?? msg;
       }
 
-      state = state.copyWith(isLoading: false, errorMessage: message);
+      state = state.copyWith(isLoading: false, errorMessage: msg);
     }
   }
 
   Future<void> logout() async {
-    try {
-      await repo.logout();
-    } catch (_) {}
-
+    await AppTokenManager.instance.clear();
     await AppPrefs.clearUserData();
 
-    // reset user provider
-    await ref.read(userProvider.notifier).logout();
+    ref.read(userProvider.notifier).logout();
 
-    // reset auth state
-    state = AuthState(
-      isLoggedIn: false,
-      isInitializing: false,
-      isLoading: false,
-      user: null,
-    );
+    state = AuthState(isLoggedIn: false, isInitializing: false);
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref);
-});
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>(
+  (ref) => AuthNotifier(ref),
+);

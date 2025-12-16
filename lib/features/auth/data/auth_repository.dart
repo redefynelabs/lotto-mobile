@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:uuid/uuid.dart';
@@ -8,6 +7,8 @@ import 'package:win33/core/storage/app_prefs.dart';
 import 'package:win33/core/models/user_model.dart';
 import 'package:dio/dio.dart';
 import 'package:win33/features/auth/data/model/register_response.dart';
+import 'package:win33/core/network/app_token_manager.dart';
+import 'package:win33/core/network/token_store.dart';
 
 Future<String> ensureDeviceId() async {
   var id = await AppPrefs.getDeviceId();
@@ -21,9 +22,9 @@ Future<String> ensureDeviceId() async {
 class AuthRepository {
   final _client = DioClient.dio;
 
-  // ======================================
-  // LOGIN API
-  // ======================================
+  // =====================================================
+  // LOGIN
+  // =====================================================
   Future<LoginResponse> login({
     required String phone,
     required String password,
@@ -40,8 +41,8 @@ class AuthRepository {
       userAgent = "iOS; ${info.utsname.machine}; ${info.systemVersion}";
     }
 
-    final response = await _client.post(
-      '/auth/login',
+    final res = await _client.post(
+      "/auth/login",
       data: {
         "phone": phone,
         "password": password,
@@ -53,31 +54,42 @@ class AuthRepository {
       ),
     );
 
-    final data = response.data;
+    final data = res.data;
 
-    final accessToken = data['accessToken'];
-    final refreshToken = data['refreshToken'];
+    final access = data["accessToken"];
+    final refresh = data["refreshToken"];
 
-    await AppPrefs.saveTokens(access: accessToken, refresh: refreshToken);
+    // SAVE TOKENS IN SECURE STORAGE
+    final tokenStore = TokenStore(
+      accessToken: access,
+      refreshToken: refresh,
+    );
 
-    final serverDeviceId = data['deviceId'];
+    await AppTokenManager.instance.save(tokenStore);
+
+    // UPDATE DIO CLIENT TOKEN CACHE
+    DioClient.updateTokens(access: access, refresh: refresh);
+
+    // Save user JSON for app startup
+    final user = UserModel.fromJson(data["user"]);
+    await AppPrefs.saveUserJson(user.toJson());
+
+    // Save deviceId returned from server (important)
+    final serverDeviceId = data["deviceId"];
     if (serverDeviceId != null) {
       await AppPrefs.saveDeviceId(serverDeviceId.toString());
     }
 
-    final user = UserModel.fromJson(data['user']);
-    await AppPrefs.saveUserJson(user.toJson());
-
     return LoginResponse(
       user: user,
-      accessToken: accessToken,
-      refreshToken: refreshToken,
+      accessToken: access,
+      refreshToken: refresh,
     );
   }
 
-  // ======================================
-  // REGISTER API
-  // ======================================
+  // =====================================================
+  // REGISTER
+  // =====================================================
   Future<RegisterResponse> register({
     required String firstName,
     required String lastName,
@@ -103,24 +115,25 @@ class AuthRepository {
     return RegisterResponse.fromJson(response.data);
   }
 
-  // ======================================
-  // VERIFY OTP API
-  // ======================================
-  Future<bool> verifyOtp({required String userId, required String otp}) async {
+  // =====================================================
+  // VERIFY OTP
+  // =====================================================
+  Future<bool> verifyOtp({
+    required String userId,
+    required String otp,
+  }) async {
     final res = await _client.post(
       "/auth/verify",
       data: {"userId": userId, "otp": otp},
     );
 
     final msg = res.data["message"]?.toString().toLowerCase() ?? "";
-
-    // Accept ANY message that contains "verified"
     return msg.contains("verified");
   }
 
-  // ======================================
-  // FORGOT PASSWORD - SEND OTP
-  // ======================================
+  // =====================================================
+  // FORGOT PASSWORD FLOW
+  // =====================================================
   Future<bool> forgotPassword(String phone) async {
     final res = await _client.post(
       "/auth/forgot-password",
@@ -131,10 +144,6 @@ class AuthRepository {
     return msg.contains("otp");
   }
 
-  // ======================================
-  // VERIFY FORGOT OTP
-  // RETURNS resetToken
-  // ======================================
   Future<String> verifyForgotOtp({
     required String phone,
     required String otp,
@@ -144,39 +153,40 @@ class AuthRepository {
       data: {"phone": phone, "otp": otp},
     );
 
-    return res.data["resetToken"]; 
+    return res.data["resetToken"];
   }
 
-  // ======================================
-  // RESET PASSWORD
-  // ======================================
   Future<bool> resetPassword({
     required String resetToken,
     required String newPassword,
   }) async {
     final res = await _client.post(
       "/auth/reset-password",
-      data: {"resetToken": resetToken, "newPassword": newPassword},
+      data: {
+        "resetToken": resetToken,
+        "newPassword": newPassword,
+      },
     );
 
     final msg = res.data["message"]?.toString().toLowerCase() ?? "";
     return msg.contains("success");
   }
 
-  // ======================================
+  // =====================================================
   // LOGOUT
-  // ======================================
+  // =====================================================
   Future<void> logout() async {
     try {
-      final refreshToken = await AppPrefs.getRefreshToken();
-      if (refreshToken != null) {
+      final refresh = AppTokenManager.instance.tokens.refreshToken;
+      if (refresh != null) {
         await _client.post(
           "/auth/logout",
-          data: {"refreshToken": refreshToken},
+          data: {"refreshToken": refresh},
         );
       }
     } catch (_) {}
 
+    await AppTokenManager.instance.clear();
     await AppPrefs.clearUserData();
   }
 }

@@ -59,7 +59,11 @@ class _OtpPageState extends State<OtpPage> {
 
             const Text(
               "Verify OTP",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 24,
+                fontFamily: "Coolvetica",
+                fontWeight: FontWeight.bold,
+              ),
             ),
 
             const SizedBox(height: 6),
@@ -98,7 +102,11 @@ class _OtpPageState extends State<OtpPage> {
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
                           "Verify OTP",
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontFamily: "Coolvetica",
+                            fontSize: 16,
+                          ),
                         ),
                 ),
               ),

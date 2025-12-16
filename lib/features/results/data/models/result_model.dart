@@ -27,6 +27,21 @@ class ResultModel {
     required this.winningNumber,
     required this.winningCombo,
   });
+  
+  factory ResultModel.empty() {
+  return ResultModel(
+    slotId: '',
+    uniqueSlotId: '',
+    type: '',
+    dateStr: '',
+    timeStr: '',
+    slotTime: DateTime.now(),
+    isVisible: false,
+    winningNumber: null,
+    winningCombo: null,
+  );
+}
+
 
   factory ResultModel.fromJson(Map<String, dynamic> json) {
     final date = json['date'] as String? ?? '';

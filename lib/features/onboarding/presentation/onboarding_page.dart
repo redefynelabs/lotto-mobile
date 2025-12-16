@@ -21,13 +21,17 @@ class OnboardingPage extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: Column(
         children: [
-          const AuthBanner(height: 320,),
+          const AuthBanner(height: 320),
 
           const SizedBox(height: 26),
 
           const Text(
             "Welcome to 33 Win",
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              fontFamily: "Coolvetica",
+            ),
           ),
 
           const SizedBox(height: 10),
@@ -66,10 +70,11 @@ class OnboardingPage extends StatelessWidget {
                       );
                     },
                     child: const Text(
-                      "LOG IN",
+                      "Login",
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                        fontFamily: "Coolvetica",
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -97,9 +102,10 @@ class OnboardingPage extends StatelessWidget {
                       );
                     },
                     child: const Text(
-                      "CONTINUE AS GUEST",
+                      "Continue as Guest",
                       style: TextStyle(
                         fontSize: 16,
+                        fontFamily: "Coolvetica",
                         fontWeight: FontWeight.w500,
                         color: Colors.black87,
                       ),

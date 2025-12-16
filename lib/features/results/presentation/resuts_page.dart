@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:win33/core/theme/app_colors.dart';
+import 'package:win33/core/widgets/common/footer.dart';
 import 'package:win33/core/widgets/common/reusable_app_bar.dart';
 import 'package:win33/features/results/data/models/result_model.dart';
 import 'package:win33/features/results/data/result_repository.dart';
@@ -176,7 +177,9 @@ class _ResultsPageState extends State<ResultsPage> {
                 "Today's Lucky Draw",
                 style: TextStyle(
                   color: AppColors.primary,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: "Coolvetica",
+
                   fontSize: 15,
                 ),
               ),
@@ -215,6 +218,7 @@ class _ResultsPageState extends State<ResultsPage> {
                 "Slot ID: ${latest.uniqueSlotId}",
                 style: const TextStyle(
                   color: AppColors.primary,
+                  fontFamily: "Coolvetica",
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -223,7 +227,10 @@ class _ResultsPageState extends State<ResultsPage> {
                 const SizedBox(height: 16),
                 const Text(
                   "Earlier Today",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: "Coolvetica",
+                  ),
                 ),
                 const SizedBox(height: 8),
 
@@ -331,7 +338,9 @@ class _ResultsPageState extends State<ResultsPage> {
               "Today's Jackpot",
               style: TextStyle(
                 color: AppColors.primary,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w500,
+                fontFamily: "Coolvetica",
+
                 fontSize: 15,
               ),
             ),
@@ -379,6 +388,8 @@ class _ResultsPageState extends State<ResultsPage> {
               style: const TextStyle(
                 color: AppColors.primary,
                 fontWeight: FontWeight.bold,
+                fontFamily: "Coolvetica",
+
                 fontSize: 13,
               ),
             ),
@@ -560,6 +571,8 @@ class _ResultsPageState extends State<ResultsPage> {
             label,
             style: TextStyle(
               color: active ? Colors.white : AppColors.primary,
+              fontFamily: "Coolvetica",
+
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -592,66 +605,57 @@ class _ResultsPageState extends State<ResultsPage> {
     final showList = listSource.take(displayedCount).toList();
     final hasMore = listSource.length > displayedCount;
 
+    // ⭐ calculate extra items
+    final bool showTodayCard =
+        selectedDate == null &&
+        ((selectedType == 'LD' && todayLDList.isNotEmpty) ||
+            (selectedType == 'JP' && todayJPList.isNotEmpty));
+
     return ListView.builder(
       padding: EdgeInsets.zero,
       itemCount:
           showList.length +
-          ((selectedDate == null &&
-                  ((selectedType == 'LD' && todayLDList.isNotEmpty) ||
-                      (selectedType == 'JP' && todayJPList.isNotEmpty)))
-              ? 1
-              : 0) +
-          (hasMore ? 1 : 0),
+          (showTodayCard ? 1 : 0) + // today card
+          (hasMore ? 1 : 0) + // show more
+          1, // ⭐ FOOTER
       itemBuilder: (context, index) {
-        // Insert today's card
-        if (index == 0 && selectedDate == null) {
-          if (selectedType == 'LD' && todayLDList.isNotEmpty) {
-            return Column(
-              children: [
-                _todayCardLD(context),
-                const SizedBox(height: 12),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'Earlier Results',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+        int currentIndex = index;
+
+        // ---------------- TODAY CARD ----------------
+        if (showTodayCard && currentIndex == 0) {
+          return Column(
+            children: [
+              selectedType == 'LD'
+                  ? _todayCardLD(context)
+                  : _todayCardJP(context),
+              const SizedBox(height: 12),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  'Earlier Results',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: "Coolvetica",
                   ),
                 ),
-                const SizedBox(height: 8),
-              ],
-            );
-          }
-
-          if (selectedType == 'JP' && todayJPList.isNotEmpty) {
-            return Column(
-              children: [
-                _todayCardJP(context),
-                const SizedBox(height: 12),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'Earlier Results',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 8),
-              ],
-            );
-          }
+              ),
+              const SizedBox(height: 8),
+            ],
+          );
         }
 
-        // adjust index due to the today card tile
-        int offset = 0;
-        if (selectedDate == null &&
-            ((selectedType == 'LD' && todayLDList.isNotEmpty) ||
-                (selectedType == 'JP' && todayJPList.isNotEmpty))) {
-          offset = 1;
+        if (showTodayCard) currentIndex--;
+
+        // ---------------- RESULT ITEMS ----------------
+        if (currentIndex < showList.length) {
+          return _listItem(showList[currentIndex]);
         }
 
-        final actualIndex = index - offset;
+        currentIndex -= showList.length;
 
-        // Load more button
-        if (actualIndex >= showList.length) {
+        // ---------------- SHOW MORE ----------------
+        if (hasMore && currentIndex == 0) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: TextButton.icon(
@@ -665,14 +669,14 @@ class _ResultsPageState extends State<ResultsPage> {
                   fontSize: 16,
                 ),
               ),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
             ),
           );
         }
 
-        return _listItem(showList[actualIndex]);
+        if (hasMore) currentIndex--;
+
+        // ---------------- FOOTER (LAST ITEM) ----------------
+        return const Footer();
       },
     );
   }

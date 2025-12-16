@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:win33/core/widgets/common/bottom_app_bar.dart';
-import 'package:win33/features/auth/presentation/login_page.dart';
 import 'package:win33/features/auth/presentation/unauthorized_page.dart';
 import 'package:win33/features/home/presentation/home_page.dart';
 import 'package:win33/features/bid/presentation/bid_page.dart';
@@ -17,6 +16,8 @@ class MainWrapper extends StatefulWidget {
 
 class _MainWrapperState extends State<MainWrapper> {
   int _index = 0;
+
+  
 
   final pages = const [HomePage(), BidPage(), ResultsPage()];
 

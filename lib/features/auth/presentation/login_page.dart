@@ -63,7 +63,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 26),
                 const Text(
                   "Welcome Back",
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+                  style: TextStyle(
+                    fontSize: 26,
+                    fontFamily: "Coolvetica",
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 const Text(
@@ -152,6 +156,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   "LOG IN",
                                   style: TextStyle(
                                     fontSize: 16,
+                                    fontFamily: "Coolvetica",
                                     color: Colors.white,
                                   ),
                                 ),
@@ -163,19 +168,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       GestureDetector(
                         onTap: () => Navigator.push(
                           context,
-                          MaterialPageRoute(
-                            builder: (_) => const SignupPage(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const SignupPage()),
                         ),
                         child: Text.rich(
                           TextSpan(
                             text: "Don't have an account? ",
+                            style: TextStyle(fontFamily: "Coolvetica"),
                             children: [
                               TextSpan(
                                 text: "Sign Up",
                                 style: TextStyle(
                                   color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                             ],
@@ -205,7 +209,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label),
+        Text(label, style: TextStyle(fontFamily: "Coolvetica")),
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
@@ -217,10 +221,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             obscureText: obscure,
             keyboardType: keyboard,
             inputFormatters: inputFormatters,
+            style: TextStyle(fontFamily: "Coolvetica"),
             decoration: InputDecoration(
               border: InputBorder.none,
               hintText: hint,
-              hintStyle: const TextStyle(color: Colors.black38),
+              hintStyle: const TextStyle(
+                color: Colors.black38,
+                fontFamily: "Coolvetica",
+              ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 14,
                 vertical: 14,
@@ -233,12 +241,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   // 🔥 PASSWORD INPUT
-  // 🔥 PASSWORD INPUT
   Widget _passwordInput() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text("Password"),
+        const Text("Password", style: TextStyle(fontFamily: "Coolvetica")),
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
@@ -248,10 +255,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           child: TextField(
             controller: passwordCtrl,
             obscureText: !showPassword,
+            style: TextStyle(fontFamily: "Coolvetica"),
             decoration: InputDecoration(
               border: InputBorder.none,
               hintText: "Enter password",
-              hintStyle: const TextStyle(color: Colors.black38),
+              hintStyle: const TextStyle(
+                color: Colors.black38,
+                fontFamily: "Coolvetica",
+              ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 14,
                 vertical: 14,
@@ -285,7 +296,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               "Forgot Password?",
               style: TextStyle(
                 color: AppColors.primary,
-                fontWeight: FontWeight.w600,
+                fontFamily: "Coolvetica",
+
+                fontWeight: FontWeight.w400,
               ),
             ),
           ),

@@ -67,7 +67,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       children: [
         const Text(
           "Forgot Password",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: 24,
+            fontFamily: "Coolvetica",
+            fontWeight: FontWeight.w700,
+          ),
         ),
 
         const SizedBox(height: 10),
@@ -78,7 +82,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
         const SizedBox(height: 24),
 
-        const Text("Phone Number", style: TextStyle(fontSize: 16)),
+        const Text(
+          "Phone Number",
+          style: TextStyle(fontSize: 16, fontFamily: "Coolvetica"),
+        ),
         const SizedBox(height: 6),
 
         _inputField(
@@ -236,7 +243,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         decoration: InputDecoration(
           border: InputBorder.none,
           hintText: hint,
-          hintStyle: const TextStyle(color: Colors.black38),
+          hintStyle: const TextStyle(
+            color: Colors.black38,
+            fontFamily: "Coolvetica",
+          ),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 14,
             vertical: 14,
@@ -297,7 +307,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         onPressed: onPressed,
         child: Text(
           label,
-          style: const TextStyle(fontSize: 16, color: Colors.white),
+          style: const TextStyle(
+            fontSize: 16,
+            fontFamily: "Coolvetica",
+            color: Colors.white,
+          ),
         ),
       ),
     );

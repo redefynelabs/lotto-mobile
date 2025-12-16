@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:win33/app/providers/wallet_provider.dart';
 import 'package:win33/features/wallet/presentation/wallet_history_page.dart';
 import '../../../core/theme/app_colors.dart';
@@ -14,12 +15,31 @@ class WalletHomePage extends ConsumerWidget {
     final balanceAsync = ref.watch(walletBalanceProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
+
       appBar: AppBar(
-        title: const Text("Wallet"),
         backgroundColor: AppColors.background,
         elevation: 0,
+        leading: IconButton(
+          icon: SvgPicture.asset(
+            'assets/icons/arrow-left.svg',
+            width: 22,
+            height: 22,
+            colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          "Wallet",
+          style: TextStyle(
+            color: Colors.black.withOpacity(0.85),
+            fontWeight: FontWeight.w500,
+            fontFamily: "Coolvetica",
+
+            fontSize: 22,
+          ),
+        ),
       ),
-      backgroundColor: AppColors.background,
 
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -30,16 +50,25 @@ class WalletHomePage extends ConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // BALANCE CARD
                 _walletCard(balance),
 
                 const SizedBox(height: 24),
+                const Text(
+                  "Actions",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
+                    fontFamily: "Coolvetica",
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 12),
 
-                // Buttons
                 _actionButton(
                   context,
                   "Request Deposit",
-                  Icons.upload_file,
+                  "assets/icons/wallet-add.svg",
+                  AppColors.primary.withOpacity(0.12),
                   () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -53,11 +82,12 @@ class WalletHomePage extends ConsumerWidget {
                 _actionButton(
                   context,
                   "Winning Settlement",
-                  Icons.monetization_on,
+                  "assets/icons/money-send.svg",
+                  Colors.green.withOpacity(0.12),
                   () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const WalletWinningPage(),
+                      builder: (_) => const WinCreditSettlementPage(),
                     ),
                   ),
                 ),
@@ -67,7 +97,8 @@ class WalletHomePage extends ConsumerWidget {
                 _actionButton(
                   context,
                   "Wallet History",
-                  Icons.history,
+                  "assets/icons/history.svg",
+                  Colors.blueGrey.withOpacity(0.12),
                   () => Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -83,43 +114,63 @@ class WalletHomePage extends ConsumerWidget {
     );
   }
 
+  // -------------------------------
+  // Wallet Summary Card
+  // -------------------------------
   Widget _walletCard(balance) {
+    final isNegative = balance.totalBalance < 0;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
+
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("Total Balance",
-              style: TextStyle(fontSize: 14, color: Colors.black54)),
+          const Text(
+            "Total Balance",
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.black54,
+              fontFamily: "Coolvetica",
+            ),
+          ),
           Text(
-            "₹${balance.totalBalance.toStringAsFixed(2)}",
-            style: const TextStyle(
-              fontSize: 26,
+            "RM ${balance.totalBalance.toStringAsFixed(2)}",
+            style: TextStyle(
+              fontSize: 30,
               fontWeight: FontWeight.bold,
+              color: isNegative ? AppColors.primary : Colors.black,
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _smallStat("Reserved", "₹${balance.reservedWinning}"),
-              _smallStat("Available", "₹${balance.availableBalance}"),
+              _smallStat("Reserved", "RM ${balance.reservedWinning}"),
+              _smallStat("Available", "RM ${balance.availableBalance}"),
             ],
           ),
 
-          const Divider(height: 24),
+          const Divider(height: 28),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _smallStat("Commission Earned", "₹${balance.commissionEarned}"),
-              _smallStat("Pending", "₹${balance.commissionPending}"),
+              _smallStat("Commission Earned", "RM ${balance.commissionEarned}"),
+              _smallStat("Pending", "RM ${balance.commissionPending}"),
             ],
           ),
         ],
@@ -127,35 +178,90 @@ class WalletHomePage extends ConsumerWidget {
     );
   }
 
+  // Stat item with negative-number highlighting
   Widget _smallStat(String title, String value) {
+    final isNegative = value.contains("-");
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: const TextStyle(fontSize: 12)),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.black54,
+            fontFamily: "Coolvetica",
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 15,
+            color: isNegative ? AppColors.primary : Colors.black,
+            
+          ),
+        ),
       ],
     );
   }
 
+  // ----------------------------------
+  // Modern Action Button
+  // ----------------------------------
   Widget _actionButton(
     BuildContext context,
     String title,
-    IconData icon,
+    String iconPath,
+    Color bgColor,
     VoidCallback onTap,
   ) {
     return InkWell(
+      borderRadius: BorderRadius.circular(14),
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.black54),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: SvgPicture.asset(
+                iconPath,
+                width: 22,
+                height: 22,
+                colorFilter: const ColorFilter.mode(
+                  Colors.black87,
+                  BlendMode.srcIn,
+                ),
+              ),
+            ),
             const SizedBox(width: 16),
-            Text(title, style: const TextStyle(fontSize: 16)),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                fontFamily: "Coolvetica",
+              ),
+            ),
+            const Spacer(),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.black45),
           ],
         ),
       ),
