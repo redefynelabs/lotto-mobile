@@ -8,7 +8,7 @@ class DioClient {
   // BASE URL
   // ------------------------------------------------------------
   static const String _baseUrl =
-      "https://server.lotto.redefyne.in/api";
+      "https://server.lotto.redefyne.in/api/v1";
 
   // ------------------------------------------------------------
   // MAIN DIO INSTANCE (WITH INTERCEPTORS)

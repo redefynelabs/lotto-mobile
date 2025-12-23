@@ -15,6 +15,7 @@ class BidItem {
   final String details;
   final double amount;
   final String slotId;
+  final String uniqueSlotId;
   final String slotType; // "LD" or "JP"
 
   BidItem({
@@ -23,6 +24,7 @@ class BidItem {
     required this.details,
     required this.amount,
     required this.slotId,
+    required this.uniqueSlotId,
     required this.slotType,
   });
 }
@@ -325,6 +327,16 @@ class _BidPageState extends State<BidPage> {
     setState(() => activeCart.clear());
   }
 
+  List<int>? _parseHashNumbers(String input) {
+    try {
+      final parts = input.split('#');
+      final nums = parts.map((e) => int.parse(e.trim())).toList();
+      return nums;
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Add to cart
   // ---------------------------------------------------------------------------
@@ -386,34 +398,45 @@ class _BidPageState extends State<BidPage> {
       final numberText = _numberController.text.trim();
       final countText = _countController.text.trim();
 
-      if (numberText.isEmpty) {
-        _showError("LD: Please enter a number (1–37).");
-        return;
-      }
-      if (countText.isEmpty) {
-        _showError("LD: Please enter count.");
+      if (numberText.isEmpty || countText.isEmpty) {
+        _showError("LD: Please enter number and count.");
         return;
       }
 
-      final number = int.tryParse(numberText);
-      final count = int.tryParse(countText);
+      final numbers = _parseHashNumbers(numberText);
+      final counts = _parseHashNumbers(countText);
 
-      if (number == null || number < 1 || number > 37) {
-        _showError("LD: Number must be between 1–37.");
+      if (numbers == null || counts == null) {
+        _showError("LD: Invalid format. Use # separated numbers.");
         return;
       }
 
-      if (count == null || count < 1) {
-        _showError("LD: Count must be at least 1.");
+      if (numbers.length != counts.length) {
+        _showError("LD: Number and Count count must match.");
         return;
       }
 
-      final details = "${slot.uniqueSlotId}#${phone}#$number#$count";
-      final amount = (slot.settingsJson['bidPrize'] is num)
-          ? (slot.settingsJson['bidPrize'] as num).toDouble() * count
-          : 10.0 * count;
+      for (int i = 0; i < numbers.length; i++) {
+        final number = numbers[i];
+        final count = counts[i];
 
-      setState(() {
+        if (number < 1 || number > 37) {
+          _showError("LD: Number must be between 1–37.");
+          return;
+        }
+        if (count < 1) {
+          _showError("LD: Count must be at least 1.");
+          return;
+        }
+
+        final details = "${slot.uniqueSlotId}#$phone#$number#$count";
+
+        final prize = (slot.settingsJson['bidPrize'] is num)
+            ? (slot.settingsJson['bidPrize'] as num).toDouble()
+            : 10.0;
+
+        final amount = prize * count;
+
         activeCart.add(
           BidItem(
             customerName: customer,
@@ -421,12 +444,15 @@ class _BidPageState extends State<BidPage> {
             details: details,
             amount: amount,
             slotId: slot.id,
+            uniqueSlotId: slot.uniqueSlotId,
             slotType: 'LD',
           ),
         );
-      });
+      }
 
-      // Reset fields
+      setState(() {});
+
+      // Reset fields (IMPORTANT: name & phone cleared only after batch)
       _customerController.clear();
       _phoneController.clear();
       _numberController.clear();
@@ -472,6 +498,7 @@ class _BidPageState extends State<BidPage> {
             details: details,
             amount: amount,
             slotId: slot.id,
+            uniqueSlotId: slot.uniqueSlotId,
             slotType: 'JP',
           ),
         );
@@ -577,7 +604,9 @@ class _BidPageState extends State<BidPage> {
     if (customer.isEmpty) return _showError("Please enter customer name.");
     if (phone.isEmpty) return _showError("Please enter phone number.");
 
-    final slotId = oldItem.slotId; // needed for details format
+    // ✅ ALWAYS reuse stored slot values
+    final slotId = oldItem.slotId;
+    final uniqueSlotId = oldItem.uniqueSlotId;
 
     if (selectedMode == 0) {
       // ------------------ LD ------------------
@@ -591,12 +620,13 @@ class _BidPageState extends State<BidPage> {
         return _showError("LD count must be ≥ 1.");
       }
 
-      // ✅ CORRECT FORMAT → slotId#phone#number#count
-      final details = "$slotId#$phone#$number#$count";
+      // ✅ CORRECT → uniqueSlotId first
+      final details = "$uniqueSlotId#$phone#$number#$count";
 
-      final amount = ((oldItem.amount > 0)
-          ? count * (oldItem.amount / (_extractLdCount(oldItem.details) ?? 1))
-          : 10.0 * count);
+      final unitPrice =
+          oldItem.amount / (_extractLdCount(oldItem.details) ?? 1);
+
+      final amount = unitPrice * count;
 
       setState(() {
         activeCart[index] = BidItem(
@@ -605,22 +635,26 @@ class _BidPageState extends State<BidPage> {
           details: details,
           amount: amount,
           slotId: slotId,
+          uniqueSlotId: uniqueSlotId,
           slotType: "LD",
         );
         _resetForm();
       });
     } else {
       // ------------------ JP ------------------
-      if (jpNumbers.any((e) => e == null))
+      if (jpNumbers.any((e) => e == null)) {
         return _showError("Select all 6 JP numbers.");
+      }
 
-      final unique = jpNumbers.toSet();
-      if (unique.length != 6) return _showError("JP numbers cannot repeat.");
+      final uniqueNums = jpNumbers.toSet();
+      if (uniqueNums.length != 6) {
+        return _showError("JP numbers cannot repeat.");
+      }
 
       final nums = jpNumbers.map((e) => e!).toList();
 
-      // ✅ CORRECT FORMAT → slotId#phone#n1-n2-n3-n4-n5-n6
-      final details = "$slotId#$phone#${nums.join('-')}";
+      // ✅ CORRECT → uniqueSlotId first
+      final details = "$uniqueSlotId#$phone#${nums.join('-')}";
 
       setState(() {
         activeCart[index] = BidItem(
@@ -629,6 +663,7 @@ class _BidPageState extends State<BidPage> {
           details: details,
           amount: oldItem.amount,
           slotId: slotId,
+          uniqueSlotId: uniqueSlotId,
           slotType: "JP",
         );
         _resetForm();
@@ -976,19 +1011,9 @@ class _BidPageState extends State<BidPage> {
           const SizedBox(height: 12),
 
           if (selectedMode == 0) ...[
-            _inputFieldController(
-              "Number",
-              "1–37",
-              _numberController,
-              keyboardType: TextInputType.number,
-            ),
+            _inputFieldController("Number", "eg: 20#31#17", _numberController),
             const SizedBox(height: 12),
-            _inputFieldController(
-              "Count",
-              "eg: 4",
-              _countController,
-              keyboardType: TextInputType.number,
-            ),
+            _inputFieldController("Count", "eg: 10#20#40", _countController),
           ] else ...[
             const Text(
               "Select 6 Numbers",

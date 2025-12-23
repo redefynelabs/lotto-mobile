@@ -45,6 +45,7 @@ class ProfilePage extends ConsumerWidget {
       return const LoginPage();
     }
 
+  
     return FadeWrapper(
       child: userAsync.when(
         loading: () => _buildSkeletonLoader(),
@@ -296,6 +297,35 @@ class ProfilePage extends ConsumerWidget {
     );
   }
 
+    String getSlotTimeText(BidModel b) {
+      final slot = b.slot;
+      if (slot == null) return '—';
+
+      // 1️⃣ Best: backend formatted
+      if (slot.slotTimeFormatted != null &&
+          slot.slotTimeFormatted!.isNotEmpty) {
+        return slot.slotTimeFormatted!;
+      }
+
+      // 2️⃣ MYT ISO string
+      if (slot.slotTimeMYT != null && slot.slotTimeMYT!.isNotEmpty) {
+        try {
+          final dt = DateTime.parse(slot.slotTimeMYT!);
+          return DateFormat('MMM dd • hh:mm a').format(dt);
+        } catch (_) {}
+      }
+
+      // 3️⃣ UTC → MYT fallback
+      try {
+        final utc = DateTime.parse(slot.slotTime);
+        final myt = utc.add(const Duration(hours: 8));
+        return DateFormat('MMM dd • hh:mm a').format(myt);
+      } catch (_) {}
+
+      return '—';
+    }
+
+
   // ------------------------------
   // BID ITEM UI
   // ------------------------------
@@ -396,7 +426,14 @@ class ProfilePage extends ConsumerWidget {
 
           // ---------------- SLOT
           Text(
-            "Slot: ${b.uniqueBidId}",
+            "Slot Id: ${b.uniqueBidId}",
+            style: const TextStyle(fontSize: 13, color: Colors.black87),
+          ),
+
+          const SizedBox(height: 4),
+
+          Text(
+            "Slot Time: ${getSlotTimeText(b)}",
             style: const TextStyle(fontSize: 13, color: Colors.black87),
           ),
 
@@ -404,7 +441,7 @@ class ProfilePage extends ConsumerWidget {
 
           // ---------------- DATE
           Text(
-            DateFormat("MMM dd, HH:mm").format(b.createdAt),
+            "Purchased At: ${DateFormat("MMM dd, HH:mm").format(b.createdAt)}",
             style: const TextStyle(fontSize: 12, color: Colors.black45),
           ),
         ],

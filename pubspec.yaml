@@ -80,8 +80,15 @@ icons_launcher:
 flutter_native_splash:
   color: "#FFFFFF"
   image: assets/icons/logo-icon_foreground.png
+
+  android_12:
+    color: "#FFFFFF"
+    image: assets/icons/logo-icon_foreground.png
+
   android: true
   ios: true
+  web: false
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

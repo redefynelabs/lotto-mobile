@@ -10,6 +10,7 @@ import 'package:pdf/pdf.dart';
 import 'package:win33/core/theme/app_colors.dart';
 import 'package:win33/features/bid/data/bidding_repository.dart';
 import 'package:win33/features/bid/data/model/bid_model.dart';
+import 'package:win33/features/profile/presentation/widgets/bid_ticket.dart';
 
 class MyBidHistoryPage extends StatefulWidget {
   const MyBidHistoryPage({super.key});
@@ -147,6 +148,33 @@ class _MyBidHistoryPageState extends State<MyBidHistoryPage> {
     );
   }
 
+  String getSlotTimeText(BidModel b) {
+    final slot = b.slot;
+    if (slot == null) return '—';
+
+    // 1️⃣ Best: backend formatted
+    if (slot.slotTimeFormatted != null && slot.slotTimeFormatted!.isNotEmpty) {
+      return slot.slotTimeFormatted!;
+    }
+
+    // 2️⃣ MYT ISO string
+    if (slot.slotTimeMYT != null && slot.slotTimeMYT!.isNotEmpty) {
+      try {
+        final dt = DateTime.parse(slot.slotTimeMYT!);
+        return DateFormat('MMM dd • hh:mm a').format(dt);
+      } catch (_) {}
+    }
+
+    // 3️⃣ UTC → MYT fallback
+    try {
+      final utc = DateTime.parse(slot.slotTime);
+      final myt = utc.add(const Duration(hours: 8));
+      return DateFormat('MMM dd • hh:mm a').format(myt);
+    } catch (_) {}
+
+    return '—';
+  }
+
   Widget _slotStatusBadge(String? status) {
     final s = (status ?? '').toUpperCase();
     Color bg = Colors.grey.shade300;
@@ -239,6 +267,15 @@ class _MyBidHistoryPageState extends State<MyBidHistoryPage> {
                         b.uniqueBidId ?? "",
                         style: const TextStyle(fontSize: 13),
                       ),
+                      const SizedBox(height: 6),
+                      Text(
+                        " Slot: ${getSlotTimeText(b)}",
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.black45,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -279,12 +316,16 @@ class _MyBidHistoryPageState extends State<MyBidHistoryPage> {
 
             // ---------------- BOTTOM ROW ----------------
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                TextButton.icon(
+                  onPressed: () => _openTicket(b),
+                  icon: const Icon(Icons.confirmation_number, size: 18),
+                  label: const Text("View Ticket"),
+                ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    // PRICE
                     Text(
                       "RM ${double.parse(b.amount.toString()).toStringAsFixed(2)}",
                       style: const TextStyle(
@@ -294,27 +335,13 @@ class _MyBidHistoryPageState extends State<MyBidHistoryPage> {
                       ),
                     ),
                     const SizedBox(height: 4),
-
-                    // DATE + TIME (Malaysia local)
                     Text(
-                      DateFormat("MMM dd • HH:mm").format(local),
+                      "Purchased At: ${DateFormat("MMM dd • HH:mm").format(b.createdAt.toLocal())}",
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.black45,
                       ),
                     ),
-                    const SizedBox(height: 4),
-
-                    // SLOT TIME (also convert to local)
-                    if (b.slot?.slotTime != null)
-                      Text(
-                        "Slot: ${DateFormat("HH:mm").format(toMalaysia(DateTime.parse(b.slot!.slotTime!)))}",
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.black54,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
                   ],
                 ),
               ],
@@ -452,8 +479,13 @@ class _MyBidHistoryPageState extends State<MyBidHistoryPage> {
 
             // ---------------- BOTTOM ROW ----------------
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                TextButton.icon(
+                  onPressed: () => _openTicket(b),
+                  icon: const Icon(Icons.confirmation_number, size: 18),
+                  label: const Text("View Ticket"),
+                ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -467,7 +499,7 @@ class _MyBidHistoryPageState extends State<MyBidHistoryPage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      DateFormat("MMM dd").format(b.createdAt),
+                      "Purchased At: ${DateFormat("MMM dd").format(b.createdAt)}",
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.black45,
@@ -503,6 +535,30 @@ class _MyBidHistoryPageState extends State<MyBidHistoryPage> {
 
   void _clearDateFilter() {
     setState(() => _dateFilter = null);
+  }
+
+  void _openTicket(BidModel bid) {
+    final repaintKey = GlobalKey();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.black.withOpacity(0.4),
+      builder: (_) {
+        return SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: BidTicketWidget(
+                bid: bid,
+                repaintKey: repaintKey,
+                showActions: true, // 🔥 share + print buttons
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   // ---------------- Export CSV & PDF ----------------
